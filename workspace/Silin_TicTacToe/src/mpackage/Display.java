@@ -215,9 +215,22 @@ public class Display extends JPanel{
 		}
 		repaint();
 
+			
+	}
+	
+	public void drawStory(Graphics page){
+		page.setColor(new Color(0,0,220));
 		
-
-		
+		int xStr= 70; //string x locations
+		int yStr= 300; // y locs
+		int yDist = 30; // delta Y
+		page.drawString("You are the Captain of a small whaling vessel in the Arctic and,", xStr, yStr);
+		page.drawString("all of a sudden, your ship is blown off course. Drifting out ", xStr, yStr + yDist);
+		page.drawString("of control it crashes into the shore of a small snow covered island.", xStr, yStr + 2*yDist);
+		page.drawString("You are able to salvage most of your supplies and radio for help,",xStr, yStr + 3*yDist);
+		page.drawString("but you will need to survive for ten days before assistance arrives.", xStr, yStr + 4*yDist);
+		page.drawString("In order to live you will need to survive rounds of tic-tac-toe against", xStr, yStr + 5*yDist);
+		page.drawString("Mother Nature. Good luck Sailor",xStr, yStr + 6*yDist);
 	}
 	
 
@@ -368,18 +381,10 @@ public class Display extends JPanel{
 		}
 		//makes a random "good" third move
 		if(squaresempty == 3 && squares[4] == 2){
-			cmove = false; // no longer computer's move
-			if(squares[0] == 1 && r.nextInt(2) == 0)
-				return 8;
-			if(squares[2] == 1 && r.nextInt(2) == 0){
-				return 6;
-			}
 			
-			if(squares[6] == 1 && r.nextInt(2) == 0)
-				return 2;
-			if(squares[8] == 1 && r.nextInt(2) == 0){
-				return 0;
-			}
+			int MoveToReturn = makeGoodThirdMove(squares);//returns a good move less than 9 or 20 if the algorithm should be used instead
+			if(MoveToReturn < 9)
+				return MoveToReturn;
 			
 		}
 		
@@ -391,120 +396,98 @@ public class Display extends JPanel{
 		return x;
 	}
 	
+	public int makeGoodThirdMove(int[] squares){//decides whether to make a good third move or generate it with the algorithm
+		cmove = false; // no longer computer's move
+		if(squares[0] == 1 && r.nextInt(2) == 0) //r.nextInt(2) decides whether or not to use the algorithm
+			return 8;
+		if(squares[2] == 1 && r.nextInt(2) == 0){
+			return 6;
+		}
+		if(squares[6] == 1 && r.nextInt(2) == 0)
+			return 2;
+		if(squares[8] == 1 && r.nextInt(2) == 0){
+			return 0;
+		}
+		
+		return 20;
+		
+	}
 	
 	//squares is the board at a given level of the search
 	//emptyLocs are the empty locations in squares, I could calculate them every time but it was easier to do it this way
 	//depth allows me to know whose move it is and it needs to return a location instead of a positional value
 	public double calcComp(int[] squares, ArrayList<Integer> emptyLocs, int depth){
-		
 		//base case
 		if(emptyLocs.size() == 0){
 			return 0;
-		}
-		
-		if(depth == 0){ //this will return the square to place in as opposed to the value of a position
-			
-			double highest = -2; //highest is the highest value of a given position -1<=x<=1
-			int highestLoc = 0; //location of the highest value
-			
-			for(int i: emptyLocs){// position of each empty square
-								
-				int[] temp = squares.clone(); // this step avoids issues where children will change the values in the parent
-				temp[i] = 1; // move to square i
-				
-				if(checkwin(temp,1)){ //if you win
-					return i; //return this current position
-				}
-				
-				ArrayList<Integer> p = new ArrayList<Integer>(); //make new emptyLocs
-				for(int j = 0; j<9; j++){
-					if(temp[j] == 0){
-						p.add(j);
-					}
-				}
-				
-				double calctemp = calcComp(temp.clone(),p, depth+1); //value of child position
-				
-
-				if(calctemp > highest){ // pick the best move
-					highestLoc = i;
-					highest = calctemp;
-				}
-				
-			}
-				
-			return highestLoc;
-		}
-		
+		}		
 		if(depth%2 == 1){ // player's turn to move
-			
-			double sum = 0; //sum of the values of a position
-			
-			
-			for(int i : emptyLocs){ // for each empty location
-				
-				int[] temp = squares.clone(); //avoid child / parent value mix-ups
-				temp[i] = 2; // move to square i
-				
-				if(checkwin(temp, 2)) //if its a loss
-					return -1; // don't make previous move
-				
-				ArrayList<Integer> p = new ArrayList<Integer>(); //form new empty locs
-				for(int j = 0; j<9; j++){
-					if(temp[j] == 0){
-						p.add(j);
-					}
-				}
-				
-				double temps = calcComp(temp.clone(),p,depth+1); //child value
-				
-				if(temps == -1) //if there is a child that will necessarily lose
-					return -1; // dont make parent move
-				
-				sum += temps; //otherwise add to the value of this position
-				
-			}
-				return sum/emptyLocs.size();	//return the value of the parent move (ie this position)
+			return playerToMove(emptyLocs, depth, squares);
 		}
-		
-		if(depth%2 == 0){ // computer to move
-			
-			double highest = -2; //value of the best move
-			
-			for(int i: emptyLocs){ // for each empty position
-				
-				int[] temp = squares.clone(); //avoid parent child conflict
-				temp[i] = 1; // make move
-				if(checkwin(temp, 1)){ // check if its a win
-					return 1;
-				}
-				
-				ArrayList<Integer> p = new ArrayList<Integer>(); //new emptyLocs
-				for(int j = 0; j<9; j++){
-					if(temp[j] == 0){
-						p.add(j);
-					}
-				}
-				
-				double calctemp = calcComp(temp,p, depth+1); //find value of the position
-				if(calctemp > highest){ //chose the best move
-					highest = calctemp;
-				}
-				
-			}
-			return highest; // value of the parent position
-
-		}
-		
-		
-		
-		return 0;	//does nothing / never reached 
-		
+		return computerToMove(emptyLocs, depth, squares);// computer to move
 	}
 	
-	//checks if squares contains a win for toWin
-	public boolean checkwin(int[] squares, int toWin){
+	public double setupNextRecurse (int[] temp, int depth){
+		ArrayList<Integer> p = new ArrayList<Integer>(); //new emptyLocs
+		for(int j = 0; j<9; j++){
+			if(temp[j] == 0){
+				p.add(j);
+			}
+		}
+		return calcComp(temp,p, depth+1); //find value of the position
+	}
+	
+	public double playerToMove(ArrayList<Integer> emptyLocs, int depth, int[] squares){
+		double sum = 0; //sum of the values of a position
 		
+		for(int i : emptyLocs){ // for each empty location
+			
+			int[] temp = squares.clone(); //avoid child / parent value mix-ups
+			temp[i] = 2; // move to square i
+			
+			if(checkwin(temp, 2)) //if its a loss
+				return -1; // don't make previous move
+			
+			double temps = setupNextRecurse(temp, depth); //child value
+			
+			if(temps == -1) //if there is a child that will necessarily lose
+				return -1; // dont make parent move
+			
+			sum += temps; //otherwise add to the value of this position
+			
+		}
+			return sum/emptyLocs.size();	//return the value of the parent move (ie this position)
+	}
+	
+	public double computerToMove(ArrayList<Integer> emptyLocs, int depth, int[] squares){
+
+		double highest = -2; //highest is the highest value of a given position -1<=x<=1
+		int highestLoc = 0; //location of the highest value
+		
+		for(int i: emptyLocs){// position of each empty square
+							
+			int[] temp = squares.clone(); // this step avoids issues where children will change the values in the parent
+			temp[i] = 1; // move to square i
+			
+			if(checkwin(temp,1)){ //if you win
+				return i; //return this current position
+			}
+			
+			double calctemp = setupNextRecurse(temp, depth); //value of child position
+
+			if(calctemp > highest){ // pick the best move
+				highestLoc = i;
+				highest = calctemp;
+			}
+		}
+		if(depth == 0)
+			return highestLoc;
+		
+		return highest;
+	}
+	
+	//checks if squares contains a win for player number toWin
+	public boolean checkwin(int[] squares, int toWin){
 		for(int i = 0; i<3; i++){ 
 			if( squares[i] == toWin && squares[i+3] == toWin && squares[i+6] == toWin){ //vertical
 				return true;
@@ -512,20 +495,14 @@ public class Display extends JPanel{
 			if(squares[i*3] == toWin && squares[i*3 +1] == toWin && squares[i*3 + 2] == toWin){ //horizontal
 				return true;
 			}
-			
 		}
-		
 		if(squares[0] == toWin && squares[4] == toWin && squares[8] == toWin){//diagonal
 			return true;
 		}
-		
 		if(squares[2] == toWin && squares[4] == toWin && squares[6] == toWin){//diagonal
 			return true;
 		}
-		
-		return false; //no win
-		
-		
+		return false; //no win		
 	}
 	
 	//initializes a new day
