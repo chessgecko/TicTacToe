@@ -111,7 +111,6 @@ public class Display extends JPanel{
 	
 	public void paintComponent(Graphics page){
 		super.paintComponent(page);
-		repaint();
 		
 		//paint the background
 		page.drawImage(background, 0, 0, null);
@@ -214,7 +213,8 @@ public class Display extends JPanel{
 				break;
 		
 		}
-		
+		repaint();
+
 		
 
 		
