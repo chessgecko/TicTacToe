@@ -52,7 +52,7 @@ public class Display extends JPanel{
 	private int firetimes;
 	double xspeed;
 	double yspeed;
-	Random r = new Random();
+	Random Random = new Random();
 					  	
 	public Display(JApplet app){
 		myApplet = app;
@@ -102,7 +102,7 @@ public class Display extends JPanel{
 		isfinished = false; // a single round is finished
 		
 		if(cmove) //make the initial move here
-			squares[setupCalcComp(squares)] = 1;
+			squares[setUpTheRecursiveCalculation(squares)] = 1;
 		
 		background = myApplet.getImage(myApplet.getCodeBase(), "resource/tictactoebackground_1.jpg"); //load background picture
 
@@ -274,7 +274,7 @@ public class Display extends JPanel{
 						}
 						
 						if(!isfinished) // prevents the computer from moving after the game has ended					    
-							squares[setupCalcComp(squares)] = 1; //pick move
+							squares[setUpTheRecursiveCalculation(squares)] = 1; //pick move
 					    
 						isfull = true; // checking again after comp moves
 						for(int j = 0; j<9; j++){ 
@@ -347,22 +347,22 @@ public class Display extends JPanel{
 	}
 	
 	
-	public int setupCalcComp(int[] squares){ // initializes the recursive search
+	public int setUpTheRecursiveCalculation(int[] tictactoeBoard){ // initializes the recursive search
 		
-		ArrayList<Integer> m = new ArrayList<Integer>(); //emptyLocs
+		ArrayList<Integer> ArrayOfEmptySquaresOnTheBoard = new ArrayList<Integer>(); //emptyLocs
 		
-		int squaresempty = 0; //first move
+		int movesMadeInTotal = 0; //first move
 		
-		for(int i = 0; i<9; i++){//add empty locations
-			if(squares[i] == 0)
-				m.add(i);
+		for(int PositionOnTheBoard = 0; PositionOnTheBoard<9; PositionOnTheBoard++){
+			if(tictactoeBoard[PositionOnTheBoard] == 0)
+				ArrayOfEmptySquaresOnTheBoard.add(PositionOnTheBoard);
 			
-				squaresempty+= squares[i];
+				movesMadeInTotal+= tictactoeBoard[PositionOnTheBoard];
 		}
 		//make a random "good" first move
-		if(squaresempty == 0){
+		if(movesMadeInTotal == 0){
 			cmove = false; // no longer computer's move
-			int n = r.nextInt(8);
+			int n = Random.nextInt(8);
 			if(n%2 == 0){
 				return 4;
 			}else{
@@ -380,32 +380,28 @@ public class Display extends JPanel{
 			}	
 		}
 		//makes a random "good" third move
-		if(squaresempty == 3 && squares[4] == 2){
+		if(movesMadeInTotal == 3 && tictactoeBoard[4] == 2){
 			
-			int MoveToReturn = makeGoodThirdMove(squares);//returns a good move less than 9 or 20 if the algorithm should be used instead
-			if(MoveToReturn < 9)
-				return MoveToReturn;
+			int moveToMakeOnTheGui = makeGoodThirdMove(tictactoeBoard);//returns a good move less than 9 or 20 if the algorithm should be used instead
+			if(moveToMakeOnTheGui < 9)
+				return moveToMakeOnTheGui;
 			
 		}
-		
 		//make one of two potential 3rd moves for a specific case
-		
-		
-		int x = (int) calcComp(squares.clone(), m, 0);
+		int x = (int) recursiveCalculation(tictactoeBoard.clone(), ArrayOfEmptySquaresOnTheBoard, 0);
 		cmove = false; // no longer computer's move
 		return x;
 	}
-	
-	public int makeGoodThirdMove(int[] squares){//decides whether to make a good third move or generate it with the algorithm
+	public int makeGoodThirdMove(int[] tictactoeBoard){//decides whether to make a good third move or generate it with the algorithm
 		cmove = false; // no longer computer's move
-		if(squares[0] == 1 && r.nextInt(2) == 0) //r.nextInt(2) decides whether or not to use the algorithm
+		if(tictactoeBoard[0] == 1 && Random.nextInt(2) == 0) //r.nextInt(2) decides whether or not to use the algorithm
 			return 8;
-		if(squares[2] == 1 && r.nextInt(2) == 0){
+		if(tictactoeBoard[2] == 1 && Random.nextInt(2) == 0){
 			return 6;
 		}
-		if(squares[6] == 1 && r.nextInt(2) == 0)
+		if(tictactoeBoard[6] == 1 && Random.nextInt(2) == 0)
 			return 2;
-		if(squares[8] == 1 && r.nextInt(2) == 0){
+		if(tictactoeBoard[8] == 1 && Random.nextInt(2) == 0){
 			return 0;
 		}
 		
@@ -416,90 +412,91 @@ public class Display extends JPanel{
 	//squares is the board at a given level of the search
 	//emptyLocs are the empty locations in squares, I could calculate them every time but it was easier to do it this way
 	//depth allows me to know whose move it is and it needs to return a location instead of a positional value
-	public double calcComp(int[] squares, ArrayList<Integer> emptyLocs, int depth){
+	public double recursiveCalculation(int[] tictactoeBoard, ArrayList<Integer> arrayOfEmptySquaresOnTheBoard, int depthInTheRecursiveTree){
 		//base case
-		if(emptyLocs.size() == 0){
+		if(arrayOfEmptySquaresOnTheBoard.size() == 0){
 			return 0;
 		}		
-		if(depth%2 == 1){ // player's turn to move
-			return playerToMove(emptyLocs, depth, squares);
+		if(depthInTheRecursiveTree%2 == 1){ // player's turn to move
+			return playerToMove(arrayOfEmptySquaresOnTheBoard, depthInTheRecursiveTree, tictactoeBoard);
 		}
-		return computerToMove(emptyLocs, depth, squares);// computer to move
+		return computerToMove(arrayOfEmptySquaresOnTheBoard, depthInTheRecursiveTree, tictactoeBoard);// computer to move
 	}
 	
-	public double setupNextRecurse (int[] temp, int depth){
+	public double setupNextRecurse (int[] tictactoeBoardtoBePassedDowntheTree, int depthInTheRecursiveTree){
 		ArrayList<Integer> p = new ArrayList<Integer>(); //new emptyLocs
 		for(int j = 0; j<9; j++){
-			if(temp[j] == 0){
+			if(tictactoeBoardtoBePassedDowntheTree[j] == 0){
 				p.add(j);
 			}
 		}
-		return calcComp(temp,p, depth+1); //find value of the position
+		return recursiveCalculation(tictactoeBoardtoBePassedDowntheTree,p, depthInTheRecursiveTree+1); //find value of the position
 	}
 	
-	public double playerToMove(ArrayList<Integer> emptyLocs, int depth, int[] squares){
-		double sum = 0; //sum of the values of a position
+	public double playerToMove(ArrayList<Integer> arrayOfEmptySquaresOnTheBoard, int depthInTheRecursiveTree, int[] ticTacToeBoard){
+		double SumOfTheHeuristicValuesOfThePlayersMoves = 0; //sum of the values of a position
 		
-		for(int i : emptyLocs){ // for each empty location
+		for(int emptyPosition : arrayOfEmptySquaresOnTheBoard){ // for each empty location
 			
-			int[] temp = squares.clone(); //avoid child / parent value mix-ups
-			temp[i] = 2; // move to square i
+			int[] ticTacToeBoardToBePassedDownTheTree = ticTacToeBoard.clone(); //avoid child / parent value mix-ups
+			ticTacToeBoardToBePassedDownTheTree[emptyPosition] = 2; // move to square i
 			
-			if(checkwin(temp, 2)) //if its a loss
+			if(checkwin(ticTacToeBoardToBePassedDownTheTree, 2)) //if its a loss
 				return -1; // don't make previous move
 			
-			double temps = setupNextRecurse(temp, depth); //child value
+			double HeuristicValueOfTheChildNode = setupNextRecurse(ticTacToeBoardToBePassedDownTheTree, depthInTheRecursiveTree); //child value
 			
-			if(temps == -1) //if there is a child that will necessarily lose
+			if(HeuristicValueOfTheChildNode == -1) //if there is a child that will necessarily lose
 				return -1; // dont make parent move
 			
-			sum += temps; //otherwise add to the value of this position
-			
+			SumOfTheHeuristicValuesOfThePlayersMoves += HeuristicValueOfTheChildNode; //otherwise add to the value of this position
 		}
-			return sum/emptyLocs.size();	//return the value of the parent move (ie this position)
+			return SumOfTheHeuristicValuesOfThePlayersMoves/arrayOfEmptySquaresOnTheBoard.size();	//return the value of the parent move (ie this position)
 	}
 	
-	public double computerToMove(ArrayList<Integer> emptyLocs, int depth, int[] squares){
+	public double computerToMove(ArrayList<Integer> arrayOfEmptySquaresOnTheBoard, int depthInTheRecursiveTree, int[] tictactoeBoard){
 
-		double highest = -2; //highest is the highest value of a given position -1<=x<=1
-		int highestLoc = 0; //location of the highest value
+		double highestHeuristicValueOfSomePosition = -2; //-1<=x<=1
+		int LocationOfTheHighestValue = 0; //only used if depth == 0
 		
-		for(int i: emptyLocs){// position of each empty square
+		for(int emptyposition: arrayOfEmptySquaresOnTheBoard){
 							
-			int[] temp = squares.clone(); // this step avoids issues where children will change the values in the parent
-			temp[i] = 1; // move to square i
+			int[] tictactoeboardToBePassedDownTheTree = tictactoeBoard.clone(); // this step avoids issues where children will change the values in the parent
+			tictactoeboardToBePassedDownTheTree[emptyposition] = 1; // move to square i
 			
-			if(checkwin(temp,1)){ //if you win
-				return i; //return this current position
+			if(checkwin(tictactoeboardToBePassedDownTheTree,1)){ //if you win
+				if(depthInTheRecursiveTree == 0)
+					return emptyposition;
+				return 1;
 			}
 			
-			double calctemp = setupNextRecurse(temp, depth); //value of child position
+			double heuristicValueOfTheChildNode = setupNextRecurse(tictactoeboardToBePassedDownTheTree, depthInTheRecursiveTree); //value of child position
 
-			if(calctemp > highest){ // pick the best move
-				highestLoc = i;
-				highest = calctemp;
+			if(heuristicValueOfTheChildNode > highestHeuristicValueOfSomePosition){ // pick the best move
+				LocationOfTheHighestValue = emptyposition;
+				highestHeuristicValueOfSomePosition = heuristicValueOfTheChildNode;
 			}
 		}
-		if(depth == 0)
-			return highestLoc;
+		if(depthInTheRecursiveTree == 0)
+			return LocationOfTheHighestValue;
 		
-		return highest;
+		return highestHeuristicValueOfSomePosition;
 	}
 	
 	//checks if squares contains a win for player number toWin
-	public boolean checkwin(int[] squares, int toWin){
+	public boolean checkwin(int[] ticTacToeBoard, int IdOfPlayerWeAreCheckingForAVictory){
 		for(int i = 0; i<3; i++){ 
-			if( squares[i] == toWin && squares[i+3] == toWin && squares[i+6] == toWin){ //vertical
+			if( ticTacToeBoard[i] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[i+3] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[i+6] == IdOfPlayerWeAreCheckingForAVictory){ //vertical
 				return true;
 			}
-			if(squares[i*3] == toWin && squares[i*3 +1] == toWin && squares[i*3 + 2] == toWin){ //horizontal
+			if(ticTacToeBoard[i*3] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[i*3 +1] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[i*3 + 2] == IdOfPlayerWeAreCheckingForAVictory){ //horizontal
 				return true;
 			}
 		}
-		if(squares[0] == toWin && squares[4] == toWin && squares[8] == toWin){//diagonal
+		if(ticTacToeBoard[0] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[4] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[8] == IdOfPlayerWeAreCheckingForAVictory){//diagonal
 			return true;
 		}
-		if(squares[2] == toWin && squares[4] == toWin && squares[6] == toWin){//diagonal
+		if(ticTacToeBoard[2] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[4] == IdOfPlayerWeAreCheckingForAVictory && ticTacToeBoard[6] == IdOfPlayerWeAreCheckingForAVictory){//diagonal
 			return true;
 		}
 		return false; //no win		
@@ -523,7 +520,7 @@ public class Display extends JPanel{
 			cmove = true;
 			playerString = "O";
 			compString = "X";
-			squares[setupCalcComp(squares)] = 1; //make the computer's move
+			squares[setUpTheRecursiveCalculation(squares)] = 1; //make the computer's move
 
 		}
 		
@@ -539,9 +536,9 @@ public class Display extends JPanel{
 			 
 			
 			if(firetimes == 0 && !compWon && !playerWon){ //when the amount of times it should move in the same direction run out
-				xspeed = r.nextInt(5)-2; // change the speed
-				yspeed = r.nextInt(5)-2;
-				firetimes = r.nextInt(40) + 30; //add more fire times
+				xspeed = Random.nextInt(5)-2; // change the speed
+				yspeed = Random.nextInt(5)-2;
+				firetimes = Random.nextInt(40) + 30; //add more fire times
 				
 			}else if(!compWon && !playerWon){ //otherwise
 				firetimes-=1; // de-increment the fire times
